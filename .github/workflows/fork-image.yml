@@ -15,14 +15,16 @@ permissions:
   contents: read
   packages: write
 
-env:
-  IMAGE: ghcr.io/${{ github.repository_owner }}/omniroute
-
 jobs:
   build-and-push:
     runs-on: ubuntu-latest
     timeout-minutes: 120
     steps:
+      # Docker repository names must be lowercase; GitHub owner names may
+      # contain uppercase (e.g. InkshadeWoods) — normalize before tagging.
+      - name: Resolve image name (lowercase owner)
+        run: echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/omniroute" >> "$GITHUB_ENV"
+
       - name: Checkout
         uses: actions/checkout@v4
 

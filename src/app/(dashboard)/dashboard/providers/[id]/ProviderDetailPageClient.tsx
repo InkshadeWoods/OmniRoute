@@ -554,7 +554,7 @@ export default function ProviderDetailPageClient() {
           providerName={providerInfo?.name || providerId}
         />
       )}
-      {!isUpstreamProxyProvider && !isFreeNoAuth && (
+      {!isUpstreamProxyProvider && (!isFreeNoAuth || providerSupportsPat) && (
         <Card>
           <ProviderAccountRoutingCard
             providerKey={providerId}

@@ -43,6 +43,10 @@ x-common: &common
     - LIVE_WS_ALLOWED_ORIGINS=${LIVE_WS_ALLOWED_ORIGINS:-http://localhost:20128,http://127.0.0.1:20128}
     - REDIS_URL=${REDIS_URL:-redis://redis:6379}
     - NODE_OPTIONS=--max-old-space-size=2048
+    # Disable background credential health-check auto-refresh (avoid PEEZY false "invalid key" flagging)
+    - OMNIROUTE_DISABLE_CREDENTIAL_HEALTH_CHECK=true
+    # Disable model auto-sync scheduler (set to 0 to disable, or hours like 24 to enable)
+    - MODEL_SYNC_INTERVAL_HOURS=0
   volumes:
     - ./data:/app/data
   healthcheck:
@@ -79,12 +83,14 @@ services:
   omniroute-base:
     <<: *common
     container_name: omniroute
-    build:
-      context: .
-      target: runner-base
-      args:
-        OMNIROUTE_BASE_PATH: ${OMNIROUTE_BASE_PATH:-}
-    image: omniroute:base
+    # Fork GHCR image (built by .github/workflows/fork-image.yml on every push
+    # to release/v*). The build: block is intentionally commented out.
+    # build:
+    #   context: .
+    #   target: runner-base
+    #   args:
+    #     OMNIROUTE_BASE_PATH: ${OMNIROUTE_BASE_PATH:-}
+    image: ghcr.io/inkshadewoods/omniroute:next
     ports:
       - "${DASHBOARD_PORT:-20128}:${DASHBOARD_PORT:-20128}"
       - "${API_PORT:-20129}:${API_PORT:-20129}"

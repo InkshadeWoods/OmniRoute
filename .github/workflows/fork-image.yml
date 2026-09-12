@@ -45,6 +45,13 @@ jobs:
           target: runner-base
           platforms: linux/amd64
           push: true
+          # Turbopack's native (Rust) compile memory is NOT bounded by the V8
+          # heap cap (OMNIROUTE_BUILD_MEMORY_MB); on a cold build after the
+          # 7-day GHA cache expires it OOMs the runner ("cannot allocate
+          # memory" at `npm run build`). Webpack is the Dockerfile-documented
+          # escape hatch and stays inside the heap cap.
+          build-args: |
+            OMNIROUTE_USE_TURBOPACK=0
           tags: |
             ${{ env.IMAGE }}:next
             ${{ env.IMAGE }}:sha-${{ github.sha }}
@@ -54,6 +61,8 @@ jobs:
       # Fork-only: also publish the runner-web flavor (+Chromium/Playwright) so
       # web-cookie providers (gemini-web, claude-web, zai-web) work from GHCR.
       # Mirrors upstream docker-publish.yml's base/web split; tag suffix "-web".
+      # Cache scope is SHARED with the base build above so the runner-web step
+      # reuses the builder layers instead of re-running `npm run build`.
       - name: Build and push WEB image (runner-web + Chromium)
         uses: docker/build-push-action@v7
         with:
@@ -61,8 +70,10 @@ jobs:
           target: runner-web
           platforms: linux/amd64
           push: true
+          build-args: |
+            OMNIROUTE_USE_TURBOPACK=0
           tags: |
             ${{ env.IMAGE }}:next-web
             ${{ env.IMAGE }}:sha-${{ github.sha }}-web
-          cache-from: type=gha,scope=fork-image-web
-          cache-to: type=gha,scope=fork-image-web,mode=max
+          cache-from: type=gha,scope=fork-image
+          cache-to: type=gha,scope=fork-image,mode=max

@@ -50,3 +50,19 @@ jobs:
             ${{ env.IMAGE }}:sha-${{ github.sha }}
           cache-from: type=gha,scope=fork-image
           cache-to: type=gha,scope=fork-image,mode=max
+
+      # Fork-only: also publish the runner-web flavor (+Chromium/Playwright) so
+      # web-cookie providers (gemini-web, claude-web, zai-web) work from GHCR.
+      # Mirrors upstream docker-publish.yml's base/web split; tag suffix "-web".
+      - name: Build and push WEB image (runner-web + Chromium)
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          target: runner-web
+          platforms: linux/amd64
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:next-web
+            ${{ env.IMAGE }}:sha-${{ github.sha }}-web
+          cache-from: type=gha,scope=fork-image-web
+          cache-to: type=gha,scope=fork-image-web,mode=max
